@@ -829,9 +829,14 @@ h1 .l+.l{color:transparent;background:linear-gradient(100deg,#8d8d98 0%,#fff 35%
     pdLast=trigger;pdc.innerHTML=detail(p);ldFix(pdc);
     pd.hidden=false;void pd.offsetWidth;pd.classList.add('on');lockScroll();
     pd.firstElementChild.scrollTop=0;$('pdx').focus({preventScroll:true});
+    setHash('product'+(i+1));
   }
+  /* адрес страницы: #products — список, #product1, #product2… — открытая карточка товара */
+  var quietClose=false;
+  function setHash(h){try{history.replaceState(null,'','#'+h)}catch(err){}}
   function closeDetail(){
     if(!pd.classList.contains('on'))return;
+    if(!quietClose)setHash('products');
     pd.classList.remove('on');unlockScroll();
     setTimeout(function(){pd.hidden=true},reduce?0:300);
     if(pdLast&&pdLast.focus)pdLast.focus({preventScroll:true});
@@ -914,8 +919,21 @@ h1 .l+.l{color:transparent;background:linear-gradient(100deg,#8d8d98 0%,#fff 35%
     var a=e.target.closest&&e.target.closest('a[href="#buy"]');if(!a)return;
     e.preventDefault();var t=$('buy');if(t)t.scrollIntoView({behavior:reduce?'auto':'smooth'});
   });
-  addEventListener('hashchange',function(){var h=location.hash.slice(1);if(KNOWN[h])show(h)});
-  var h0=location.hash.slice(1);show(KNOWN[h0]?h0:'games',true);
+  function prodFromHash(h){var m=/^product(\d+)$/.exec(h);return m&&PRODUCTS[+m[1]-1]?+m[1]-1:-1}
+  addEventListener('hashchange',function(){
+    var h=location.hash.slice(1),pi=prodFromHash(h);
+    if(pi>=0){
+      if(cur!=='products')show('products');
+      if(pd.hidden)openDetail(pi,null);
+      else{pdc.innerHTML=detail(PRODUCTS[pi]);ldFix(pdc);pd.firstElementChild.scrollTop=0}
+    }else if(KNOWN[h]){
+      quietClose=true;closeDetail();quietClose=false;
+      show(h);
+    }
+  });
+  var h0=location.hash.slice(1),p0=prodFromHash(h0);
+  if(p0>=0){show('products',true);openDetail(p0,null)}
+  else show(KNOWN[h0]?h0:'games',true);
 
   /* мягкая подсветка карточек за курсором */
   if(window.matchMedia('(hover:hover)').matches){
